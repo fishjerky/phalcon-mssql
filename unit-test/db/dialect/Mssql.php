@@ -29,7 +29,7 @@ class Mssql extends \Phalcon\Db\Dialect implements \Phalcon\Db\DialectInterface
 
 
 	public function tableExists($tableName, $schemaName = null){
-return "select * from mc2.sys.tables where name = '$tableName'";
+//return "select * from mc2.sys.tables where name = '$tableName'";
 
 	}
 

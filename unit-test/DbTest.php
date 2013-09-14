@@ -39,17 +39,30 @@ $loader->registerNamespaces(
 // register autoloader
 $loader->register();
 
-
+$configMssql = array(
+		'host'          => 'McDev',
+		'username'      => 'apnewmc',
+		'password'      => 'Cm!2212@12',
+		'dbname'        => 'CCCMCDEV1',
+		'dialectClass'  => '\Twm\Db\Dialect\Mssql',
+		'pdoType'		=> 'dblib'
+		);
+/*
+try{
+			$connection = new Twm\Db\Adapter\Pdo\Mssql($configMssql);
+		$success = $connection->insert('prueba', array("LOL 1", "A"));
+		$connection->delete("prueba");
+		}catch(\PDOException $ex){
+			echo '<pre>'. print_r($ex->getMessage(),true ) . '</pre>';
+			echo '<pre>'. print_r($ex->getTrace(),true ) . '</pre>';
+		}
+		*/
 class DbTest extends PHPUnit_Framework_TestCase
 {
 
-	private $tryMysql = false;
 	public function testDbMysql()
 	{
-		if(!$this->tryMysql){
 			$this->markTestSkipped("Skipped");
-			return;
-		}
 		$configMysql = array(
 				'host'          => 'localhost',
 				'username'      => 'mc2',
@@ -59,18 +72,13 @@ class DbTest extends PHPUnit_Framework_TestCase
 
 		if (!empty($configMysql)) {
 			$connection = new Phalcon\Db\Adapter\Pdo\Mysql($configMysql);
-			$this->_executeTests($connection);
 		} else {
 			$this->markTestSkipped("Skipped");
 		}
 	}
 	public function testDbMssql()
 	{
-		if($this->tryMysql){
-			$this->markTestSkipped("Skipped");
-			return;
-		}
-		$configMssql = array(
+			$configMssql = array(
 				'host'          => 'McDev',
 				'username'      => 'apnewmc',
 				'password'      => 'Cm!2212@12',
@@ -98,9 +106,7 @@ class DbTest extends PHPUnit_Framework_TestCase
 
 	protected function _executeTests($connection)
 	{		
-		$result = ($this->tryMysql)?
-			$connection->query("SELECT * FROM tb_s_classification LIMIT 3"):
-			$connection->query("SELECT TOP 3  * FROM tb_a_boutique_data");
+		$result = $connection->query("SELECT TOP 3  * FROM tb_a_boutique_data");
 
 		$this->assertTrue(is_object($result));
 		$this->assertEquals(get_class($result), 'Phalcon\Db\Result\Pdo');
@@ -127,7 +133,7 @@ class DbTest extends PHPUnit_Framework_TestCase
 		$row = $result->fetch();
 		$this->assertTrue(is_array($row));
 		$this->assertEquals(count($row), 10);		#!!!11 -> 10
-		$this->assertTrue(isset($row[0]));
+			$this->assertTrue(isset($row[0]));
 		$this->assertFalse(isset($row['cedula']));
 		$this->assertFalse(isset($row->cedula));
 
@@ -136,7 +142,7 @@ class DbTest extends PHPUnit_Framework_TestCase
 		$row = $result->fetch();
 		$this->assertTrue(is_array($row));
 		$this->assertEquals(count($row), 10);		#!!!11 -> 10
-		$this->assertFalse(isset($row[0]));
+			$this->assertFalse(isset($row[0]));
 		$this->assertTrue(isset($row['guid']));// $this->assertTrue(isset($row['cedula']));
 		$this->assertFalse(isset($row->guid)); //$this->assertFalse(isset($row->cedula));
 
@@ -155,9 +161,8 @@ class DbTest extends PHPUnit_Framework_TestCase
 
 		$result = $connection->execute("DELETE FROM prueba");
 		$this->assertTrue($result);
-		
-		//$success = $connection->execute('INSERT INTO prueba(id, nombre, estado) VALUES ('.$connection->getDefaultIdValue().', ?, ?)', array("LOL 1", "A"));
-		$success = $connection->execute('INSERT INTO prueba(nombre, estado) VALUES (?, ?)', array("LOL 1", "A"));
+
+		$success = $connection->execute('INSERT INTO prueba(id, nombre, estado) VALUES ('.$connection->getDefaultIdValue().', ?, ?)', array("LOL 1", "A"));
 		$this->assertTrue($success);
 
 		$success = $connection->execute('UPDATE prueba SET nombre = ?, estado = ?', array("LOL 11", "R"));
@@ -166,8 +171,7 @@ class DbTest extends PHPUnit_Framework_TestCase
 		$success = $connection->execute('DELETE FROM prueba WHERE estado = ?', array("R"));
 		$this->assertTrue($success);
 
-		//$success = $connection->insert('prueba', array($connection->getDefaultIdValue(), "LOL 1", "A"));
-		$success = $connection->insert('prueba', array("LOL 1", "A"));
+		$success = $connection->insert('prueba', array($connection->getDefaultIdValue(), "LOL 1", "A"));
 		$this->assertTrue($success);
 
 		$success = $connection->insert('prueba', array("LOL 2", "E"), array('nombre', 'estado'));
@@ -193,23 +197,24 @@ class DbTest extends PHPUnit_Framework_TestCase
 		$success = $connection->update('prueba', array("nombre"), array(new Phalcon\Db\RawValue('current_date')), "estado='X'");
 		$this->assertTrue($success);
 
+/*
 		$connection->delete("prueba", "estado='X'");
 		$this->assertTrue($success);
 
 		$connection->delete("prueba");
 		$this->assertTrue($success);
 		$this->assertEquals($connection->affectedRows(), 53);
+*/
+		$row = $connection->fetchOne("SELECT * FROM prueba");
+		$this->assertEquals(count($row), 1);
 
-		$row = $connection->fetchOne("SELECT * FROM tb_s_classification");
-		$this->assertEquals(count($row), 22);
-
-		$row = $connection->fetchOne("SELECT * FROM tb_s_classification", Phalcon\Db::FETCH_NUM);
+		$row = $connection->fetchOne("SELECT * FROM personas", Phalcon\Db::FETCH_NUM);
 		$this->assertEquals(count($row), 11);
 
-		$rows = $connection->fetchAll("SELECT * FROM tb_s_classification LIMIT 10");
+		$rows = $connection->fetchAll("SELECT top 10 * FROM personas ");
 		$this->assertEquals(count($rows), 10);
 
-		$rows = $connection->fetchAll("SELECT * FROM tb_s_classification LIMIT 10", Phalcon\Db::FETCH_NUM);
+		$rows = $connection->fetchAll("SELECT top 10 * FROM personas ", Phalcon\Db::FETCH_NUM);
 		$this->assertEquals(count($rows), 10);
 		$this->assertEquals(count($rows[0]), 11);
 
@@ -220,7 +225,7 @@ class DbTest extends PHPUnit_Framework_TestCase
 
 		//Check for auto-increment column
 		$this->assertTrue($connection->lastInsertId('subscriptores_id_seq') > 0);
-
+/*
 		// Create View
 		$success = $connection->createView('phalcon_test_view', array('sql' => 'SELECT 1 AS one, 2 AS two, 3 AS three'));
 		$this->assertTrue($success);
@@ -243,8 +248,8 @@ class DbTest extends PHPUnit_Framework_TestCase
 		//Drop view
 		$success = $connection->dropView('phalcon_test_view');
 		$this->assertTrue($success);
-
 		//Transactions without savepoints.
+
 		$connection->setNestedTransactionsWithSavepoints(false);
 
 		$success = $connection->begin(); // level 1 - real
@@ -309,6 +314,7 @@ class DbTest extends PHPUnit_Framework_TestCase
 
 		$success = $connection->rollback(); // rollback - real rollback
 		$this->assertTrue($success);
+*/
 	}
 
 }

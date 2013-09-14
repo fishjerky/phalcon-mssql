@@ -112,6 +112,10 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
 		return parent::query($sql, $bindParams, $bindTypes);
 	}
 
+	//insert miss parameters, need to do this
+	public function executePrepared(\PDOStatement $statement, $placeholders = array(), $dataTypes = array()){
+		return $this->_pdo->prepare($statement->queryString, $placeholders);
+	}
 
 	/*
 	public function query($sqlStatement, $bindParams = array(), $bindTypes = array()){
