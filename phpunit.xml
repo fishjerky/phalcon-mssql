@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<phpunit backupGlobals="false"
+backupStaticAttributes="false"
+colors="true"
+convertErrorsToExceptions="true"
+convertNoticesToExceptions="true"
+convertWarningsToExceptions="true"
+processIsolation="false"
+stopOnFailure="false"
+syntaxCheck="false">
+	<testsuites>
+		<testsuite name="Phalcon PHP Framework">
+			<!-- Database tests -->
+			<file>unit-tests/DbTest.php</file>
+			<file>unit-tests/DbDialectTest.php</file>
+			<file>unit-tests/DbProfilerTest.php</file>
+			<file>unit-tests/DbBindTest.php</file>
+			<file>unit-tests/DbDescribeTest.php</file>
+			<file>unit-tests/DbLoggerTest.php</file>
+
+						<!-- ORM tests / First Part -->
+
+			<file>unit-tests/ModelsMetadataTest.php</file>
+						<!--
+
+
+			<file>unit-tests/ModelsTest.php</file>
+			<file>unit-tests/ModelsCalculationsTest.php</file>
+			<file>unit-tests/ModelsResultsetTest.php</file>
+			<file>unit-tests/ModelsRelationsTest.php</file>
+			<file>unit-tests/ModelsValidatorsTest.php</file>
+			<file>unit-tests/ModelsForeignKeysTest.php</file>
+			<file>unit-tests/ModelsMetadataAdaptersTest.php</file>
+			<file>unit-tests/ModelsMetadataStrategyTest.php</file>
+			<file>unit-tests/ModelsMetadataManualTest.php</file>
+			<file>unit-tests/ModelsQueryParsingTest.php</file>
+			<file>unit-tests/ModelsQueryExecuteTest.php</file>
+			<file>unit-tests/ModelsQueryBuilderTest.php</file>
+			<file>unit-tests/ModelsCriteriaTest.php</file>
+			<file>unit-tests/ModelsEventsTest.php</file>
+			<file>unit-tests/ModelsBehaviorsTest.php</file>
+			<file>unit-tests/ModelsMultipleSourcesTest.php</file>
+			<file>unit-tests/ModelsSerializeTest.php</file>
+			<file>unit-tests/ModelsHydrationTest.php</file>
+			<file>unit-tests/ModelsTransactionsTest.php</file>
+			<file>unit-tests/ModelsRelationsMagicTest.php</file>
+			<file>unit-tests/ModelsSnapshotsTest.php</file>
+			<file>unit-tests/ModelsDynamicOperationsTest.php</file>
+			<file>unit-tests/ModelsFindersTest.php</file>
+			<file>unit-tests/ModelsMassAssigmentTest.php</file>
+			-->
+
+		</testsuite>
+	</testsuites>
+</phpunit>
