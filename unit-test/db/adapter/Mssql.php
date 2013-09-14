@@ -1,46 +1,119 @@
 <?php
 namespace Twm\Db\Adapter\Pdo;
 
-class Mssql extends \Phalcon\Db\Adapter\Pdo implements \Phalcon\Db\AdapterInterface
+use Phalcon\Db\Column,
+	Phalcon\Db\Adapter\Pdo as AdapterPdo,
+	Phalcon\Events\EventsAwareInterface,
+	Phalcon\Db\AdapterInterface;
+
+class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
 {
 
 	protected $_type = 'mssql';
-	protected $_config;
-	protected $_connection;
+	protected $_dialectType = 'sqlsrv';
+
 	public function  __construct($descriptor){
-		$this->_config = $descriptor;
-		parent::__construct($descriptor);
-		//$this->_connection->exec('SET QUOTED_IDENTIFIER ON');
+		$this->connect($descriptor);
 	}
 
 	//public function escapeIdentifier(){}
 
 	public function describeColumns($table, $schema = null){
-		if (isset($schema))
-			$schema = "$schema.INFORMATION_SCHEMA.COLUMNS";
-		else
-			$schema = "INFORMATION_SCHEMA.COLUMNS";
+		$primaryKeys = array();
 
-		$sql = "SELECT * FROM $schema WHERE TABLE_NAME = N'$table'";
-		$result = mssql_query($sql);
-		return mssql_fetch_array( $result ); 
+		$describeKeys = $this->fetchAll("exec sp_pkeys @table_name = '$table'");
+		foreach ($describeKeys as $field) {
+			$primaryKeys[$field['COLUMN_NAME']] = true;
+		}
+
+		$describeTable = $this->fetchAll("exec sp_columns @table_name = '$table'");
+
+		$finalDescribe = array();
+
+		foreach ($describeTable as $field) {
+
+			$type = null;
+			$bindType = Column::BIND_PARAM_STR;
+			$autoIncrement = false;
+
+			switch ($field['TYPE_NAME']) {
+				case 'int identity':
+					$type = Column::TYPE_INTEGER;
+					$bindType = Column::BIND_PARAM_INT;
+					$autoIncrement = true;
+					break;
+				case 'int':
+					$type = Column::TYPE_INTEGER;
+					$bindType = Column::BIND_PARAM_INT;
+					break;
+				case 'nchar':
+					$type = Column::TYPE_VARCHAR;
+					break;
+				case 'char':
+					$type = Column::TYPE_CHAR;
+					break;
+				case 'smallint':
+					$type = Column::TYPE_INTEGER;
+					$bindType = Column::BIND_PARAM_INT;
+					break;
+				case 'float':
+					$type = Column::TYPE_DECIMAL;
+					$bindType = Column::BIND_SKIP;
+					break;
+				default:
+					echo $field['TYPE_NAME'];
+					$type = Column::TYPE_VARCHAR;
+			}
+
+			$columnDefinition = array(
+					"type" => $type,
+					"size" => $field['LENGTH'],
+					"unsigned" => false,
+					"notNull" => $field['NULLABLE'] == 1
+					);
+
+			if ($autoIncrement) {
+				$columnDefinition['autoIncrement'] = $autoIncrement;
+			}
+
+			if (isset($primaryKeys[$field['COLUMN_NAME']])) {
+				$columnDefinition['primary'] = true;
+			}
+
+			$finalDescribe[$field['COLUMN_NAME']] = new Column($field['COLUMN_NAME'], $columnDefinition);
+		}
+
+		return $finalDescribe;
 	}
 
 	public function connect($descriptor = null ){
-		$this->_connection = new \PDO(
+		$this->_pdo = new \PDO(
 				"{$descriptor['pdoType']}:host={$descriptor['host']};dbname={$descriptor['dbname']}",
 				$descriptor['username'], 
-				$descriptor['password']
+				$descriptor['password'],
+				array(
+					\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+					\PDO::ATTR_STRINGIFY_FETCHES => true
+					)
 				);
-		$this->_connection->setAttribute( \PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION );
-		$query = $this->_connection->prepare('SET QUOTED_IDENTIFIER ON'); 
-		$query->execute();
+
+		//$this->_connection->setAttribute( \PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION );
+		//$query = $this->_connection->prepare('SET QUOTED_IDENTIFIER ON'); 
+		//$query->execute();
+
+		$this->_dialect = new \Twm\Db\Dialect\Mssql();
 	}
 
+	public function query($sql, $bindParams=null, $bindTypes=null)
+	{
+		if (strpos($sql, 'SELECT COUNT(*) "numrows"') !== false) {
+			$sql .= ' dt ';
+		}
+		return parent::query($sql, $bindParams, $bindTypes);
+	}
+
+
 	/*
-	   public function prepare($sqlStatement){
-	   }
-	 */
 	public function query($sqlStatement, $bindParams = array(), $bindTypes = array()){
 		$query = $this->_connection->prepare($sqlStatement); 
 		$result = new \Phalcon\Db\Result\Pdo($this->_connection, $query, $sqlStatement, $bindParams, $bindTypes);
@@ -48,6 +121,7 @@ class Mssql extends \Phalcon\Db\Adapter\Pdo implements \Phalcon\Db\AdapterInterf
 		return $result;
 
 	}
+	 */
 
 	/**
 	 * Creates a PDO DSN for the adapter from $this->_config settings.
