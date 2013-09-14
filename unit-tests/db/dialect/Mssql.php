@@ -42,7 +42,7 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
 				} else {
 				let escapeChar = null;
 				}*/
-		$escapeChar = null;
+		$escapeChar = '"';
 
 		if (is_array($columns)){
 			$selectedColumns = array();
@@ -215,8 +215,8 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
 		/**
 		 * Check for a LIMIT condition
 		 */
-		$limitValue = $definition["limit"];
 		if (isset($limitValue)) {
+			$limitValue = $definition["limit"];
 			if (is_array($limitValue)) {
 
 				$number = $limitValue["number"];

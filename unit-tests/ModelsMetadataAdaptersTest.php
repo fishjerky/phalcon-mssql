@@ -20,6 +20,7 @@
 
 require_once 'helpers/xcache.php';
 
+include "loader.php";
 class ModelsMetadataAdaptersTest extends PHPUnit_Framework_TestCase
 {
 
@@ -101,7 +102,7 @@ class ModelsMetadataAdaptersTest extends PHPUnit_Framework_TestCase
 
 		$di->set('db', function(){
 			require 'unit-tests/config.db.php';
-			return new Phalcon\Db\Adapter\Pdo\Mysql($configMysql);
+			return new Twm\Db\Adapter\Pdo\Mssql($configMssql);
 		});
 
 		return $di;

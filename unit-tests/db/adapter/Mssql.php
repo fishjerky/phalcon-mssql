@@ -188,15 +188,76 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
 
 	public function query($sql, $bindParams=null, $bindTypes=null)
 	{
-		if (strpos($sql, 'SELECT COUNT(*) "numrows"') !== false) {
-			$sql .= ' dt ';
+		if(is_string($sql)){
+			$sql = str_replace('rowcount' ,'[rowcount]', $sql);
+
+			if (strpos($sql, 'SELECT COUNT(*) "numrows"') !== false) {
+				$sql .= ' dt ';
+			}
 		}
+
 		return parent::query($sql, $bindParams, $bindTypes);
+
 	}
 
 	//insert miss parameters, need to do this
-	public function executePrepared(\PDOStatement $statement, $placeholders = array(), $dataTypes = array()){
-		return $this->_pdo->prepare($statement->queryString, $placeholders);
+	public function executePrepared(\PDOStatement $statement, $placeholders, $dataTypes ){
+		//return $this->_pdo->prepare($statement->queryString, $placeholders);//not working
+
+		if ( !is_array($placeholders)) {
+			throw new Phalcon\Db\Exception("Placeholders must be an array");
+		}
+
+		foreach ($placeholders as  $wildcard => $value) {
+			$parameter = '';
+
+			if (is_int($wildcard)){
+				$parameter = $wildcard + 1;
+			} else {
+				if (is_string($wildcard)) {
+					$parameter = $wildcard;
+				} else {
+					throw new Phalcon\Db\Exception("Invalid bind parameter");
+				}
+			}
+
+			if (is_array( $dataTypes) && !empty($dataTypes)) {
+				if (!isset($dataTypes[$wildcard])) {
+					throw new Phalcon\Db\Exception("Invalid bind type parameter");
+				}
+				$type = $dataTypes[$wildcard];
+
+				/**
+				 * The bind type is double so we try to get the double value
+				 */
+				 $castValue;
+				if ($type == Phalcon\Db\Column::BIND_PARAM_DECIMAL) {
+					$castValue = doubleval($value);
+					$type = Phalcon\Db\Column::BIND_SKIP;
+				} else {
+					$castValue = $value;
+				}
+
+				/**
+				 * 1024 is ignore the bind type
+				 */
+				if ($type == Phalcon\Db\Column::BIND_SKIP) {
+					//$statement->bindParam($parameter, $castValue);
+					$statement->bindValue($parameter, $castValue);
+				} else {
+					//$statement->bindParam($parameter, $castValue, $type);
+					$statement->bindValue($parameter, $castValue, $type);
+				}
+
+			} else {
+				//$statement->bindParam($parameter, $value);	//TODO: all column with the latest parameter value
+				$statement->bindValue($parameter, $value);
+			}
+		}
+		//var_dump($statement->queryString);
+
+		$statement->execute();
+		return $statement;
 	}
 
 	public function insert($table, $values, $fields=null, $dataTypes=null)
@@ -231,7 +292,7 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
 		//echo PHP_EOL;	var_dump($dataTypes);
 		foreach ( $values as $position => $value){
 			if (is_object($value)) {
-				//let placeholders[] = (string) value;
+				$placeholders[] = (string) $value;
 			} else {
 				if ( $value == null ) {
 					$placeholders[] = "null";
@@ -248,6 +309,7 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
 				}
 			}
 		}
+		//var_dump($placeholders);
 
 		if (false) { //globals_get("db.escape_identifiers") {
 			$escapedTable = $this->escapeIdentifier($table);
@@ -277,7 +339,96 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
 			/**
 			 * Perform the execution via PDO::execute
 			 */
-			return $this->execute($insertSql, $insertValues, $bindDataTypes);
+			return $this->execute($insertSql, $insertValues, $bindDataTypes); 
+			//return $this->_pdo->execute($insertSql, $insertValues, $bindDataTypes);
+		}
+
+	public function update($table, $fields, $values,$whereCondition = null, $dataTypes=null)
+	{
+		$placeholders; $insertValues; $bindDataTypes; $bindType;
+		$position; $value; $escapedTable; $joinedValues; $escapedFields;
+		$field; $insertSql;
+
+		if ( !is_array($fields) ) {
+			throw new Phalcon\Db\Exception("The second for update isn't an Array");
+		}
+		if (!is_array($values)) {
+			throw new Phalcon\Db\Exception("The third parameter for insert isn't an Array");
+		}
+
+		/**
+		 * A valid array with more than one element is required
+		 */
+		if (!count($values)) {
+			throw new Phalcon\Db\Exception("Unable to update " . $table . " without data");
+		}
+
+		$placeholders = array();
+		$insertValues = array();
+
+		if (!is_array($dataTypes)) {
+			$bindDataTypes = array();
+		} else {
+			$bindDataTypes = $dataTypes;
+		}
+
+		/**
+		 * Objects are casted using __toString, null values are converted to string "null", everything else is passed as "?"
+		 */
+		//echo PHP_EOL;	var_dump($dataTypes);
+		foreach ( $values as $position => $value){
+			if (is_object($value)) {
+				$placeholders[] = (string) $value;
+			} else {
+				if ( $value == null ) {
+					$placeholders[] = "null";
+				} else {
+					$placeholders[] = "?";
+					$insertValues[] = $value;
+					if (is_array($dataTypes)) {
+						if( !isset($dataTypes[$position])){
+							throw new Phalcon\Db\Exception("Incomplete number of bind types");
+						}
+						$bindType = $dataTypes[$position];
+						$bindDataTypes[] = $bindType;
+					}
+				}
+			}
+		}
+		//var_dump($placeholders);
+
+		if (false) { //globals_get("db.escape_identifiers") {
+			$escapedTable = $this->escapeIdentifier($table);
+		} else {
+			$escapedTable = $table;
+		}
+
+			if (false ) {//globals_get("db.escape_identifiers") {
+				$escapedFields = array();
+				foreach ($fields as $field) {
+					$escapedFields[] = $this->escapeIdentifier($field);
+				}
+			} else {
+				$escapedFields = $fields;
+			}
+
+		/**
+		 * Build the final SQL update statement
+		 */
+		$updateSql = "UPDATE " . $escapedTable . " SET ";
+		for($i=0; $i<count($escapedFields); $i++){
+			$updateSql .= "{$escapedFields[$i]} = {$placeholders[$i]}";
+			if ($i <= (count($escapedFields) - 2))
+				$updateSql .= ', ';
+		}
+			if (!empty($whereCondition)) {
+				$updateSql .= " WHERE " . $whereCondition;
+			}
+
+			/**
+			 * Perform the execution via PDO::execute
+			 */
+			return $this->execute($updateSql, $insertValues, $bindDataTypes); 
 		}
 
 
@@ -375,10 +526,10 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
 					$constraintName = $reference[2];
 					if (!isset($references[$constraintName])) {
 						$references[$constraintName] = array(
-							"referencedSchema"  => $reference[3],
-							"referencedTable"   => $reference[4],
-							"columns"           => $emptyArr,
-							"referencedColumns" => $emptyArr
+								"referencedSchema"  => $reference[3],
+								"referencedTable"   => $reference[4],
+								"columns"           => $emptyArr,
+								"referencedColumns" => $emptyArr
 								);
 					}
 
@@ -389,11 +540,11 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
 				$referenceObjects = array();
 				foreach ($references as $name => $arrayReference) {
 					$referenceObjects[$name] = new Phalcon\Db\Reference($name, array(
-							"referencedSchema"	=> $arrayReference["referencedSchema"],
-							"referencedTable"	=> $arrayReference["referencedTable"],
-							"columns"			=> $arrayReference["columns"],
-							"referencedColumns" => $arrayReference["referencedColumns"]
-							));
+								"referencedSchema"	=> $arrayReference["referencedSchema"],
+								"referencedTable"	=> $arrayReference["referencedTable"],
+								"columns"			=> $arrayReference["columns"],
+								"referencedColumns" => $arrayReference["referencedColumns"]
+								));
 				}
 
 				return $referenceObjects;

@@ -53,7 +53,8 @@ class DbTest extends PHPUnit_Framework_TestCase
 	}
 
 	protected function _executeTests($connection)
-	{		
+	{
+				
 		$result = $connection->query("SELECT TOP 3  * FROM personas ");
 
 		$this->assertTrue(is_object($result));
@@ -111,6 +112,7 @@ class DbTest extends PHPUnit_Framework_TestCase
 		//$success = $connection->execute('INSERT INTO prueba(id, nombre, estado) VALUES ('.$connection->getDefaultIdValue().', ?, ?)', array("LOL 1", "A"));
 		$success = $connection->execute('INSERT INTO prueba( nombre, estado) VALUES ( ?, ?)', array("LOL 1", "A"));
 		$this->assertTrue($success);
+		return;
 
 		$success = $connection->execute('UPDATE prueba SET nombre = ?, estado = ?', array("LOL 11", "R"));
 		$this->assertTrue($success);
@@ -128,30 +130,29 @@ class DbTest extends PHPUnit_Framework_TestCase
 		$success = $connection->insert('prueba', array("LOL 3", "I"), array('nombre', 'estado'));
 		$this->assertTrue($success);
 
-		$success = $connection->insert('prueba', array(new Phalcon\Db\RawValue('current_date'), "A"), array('nombre', 'estado'));
+		$success = $connection->insert('prueba', array(new Phalcon\Db\RawValue('GETDATE()'), "A"), array('nombre', 'estado'));
 		$this->assertTrue($success);
 
 		for ($i=0; $i<50; $i++) {
 			$success = $connection->insert('prueba', array("LOL ".$i, "F"), array('nombre', 'estado'));
 			$this->assertTrue($success);
 		}
-
-		$success = $connection->update('prueba', array("nombre", "estado"), array("LOL 1000", "X"), "estado='E'");
+		
+		$success = $connection->update('prueba', array("nombre", "estado"), array("LOL 1000", "X"), "estado='F'");
 		$this->assertTrue($success);
 
 		$success = $connection->update('prueba', array("nombre"), array("LOL 3000"), "estado='X'");
 		$this->assertTrue($success);
 
-		$success = $connection->update('prueba', array("nombre"), array(new Phalcon\Db\RawValue('current_date')), "estado='X'");
+		$success = $connection->update('prueba', array("nombre"), array(new Phalcon\Db\RawValue('GETDATE()')), "estado='X'");
 		$this->assertTrue($success);
 
 		$connection->delete("prueba", "estado='X'");
 		$this->assertTrue($success);
 
 		$connection->delete("prueba");
-		$this->assertTrue($success);
-//		$this->assertEquals(53, $connection->affectedRows());
-	
+		$this->assertEquals(4, $connection->affectedRows());
+
 		$row = $connection->fetchOne("SELECT * FROM prueba");
 		$this->assertEquals(count($row), 1);
 
@@ -166,6 +167,7 @@ class DbTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals(count($rows[0]), 11);
 
 		//Auto-Increment/Serial Columns
+		
 		//$sql = 'INSERT INTO subscriptores(id, email, created_at, status) VALUES ('.$connection->getDefaultIdValue().', ?, ?, ?)';
 		$sql = 'INSERT INTO subscriptores( email, created_at, status) VALUES ( ?, ?, ?)';
 		$success = $connection->execute($sql, array('shirley@garbage.com', "2011-01-01 12:59:13", "P"));

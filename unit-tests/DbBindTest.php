@@ -21,26 +21,7 @@
 
 use Phalcon\Db\Column as DbColumn;
 // Creates the autoloader
-$loader = new \Phalcon\Loader();
-
-$loader->registerDirs(
-		array(
-			'models/'
-			,'/var/www/html/phpunit-3.7/'
-			)
-		);
-
-//Register some namespaces
-$loader->registerNamespaces(
-		array(
-			"Twm\Db\Adapter\Pdo"    => "db/adapter/",
-			"Twm\Db\Dialect"    => "db/dialect/"
-			)
-		);
-
-// register autoloader
-$loader->register();
-
+require "loader.php";
 class DbBindTest extends PHPUnit_Framework_TestCase
 {
 	public function testDbMssql()
@@ -75,7 +56,8 @@ return;
 
 	
 
-	/*protected function _executeRawBindTests($connection)
+	/*
+	protected function _executeRawBindTests($connection)
 	{
 
 		$conditions = $connection->bindParams("a=?0", array(0 => 100));
@@ -157,7 +139,7 @@ return;
 	{
 
 		$success = $connection->execute(
-			'INSERT INTO prueba(id, nombre, estado) VALUES ('.$connection->getDefaultIdValue().', ?, ?)',
+			'INSERT INTO prueba( nombre, estado) VALUES ( ?, ?)',
 			array("LOL 1", "A"),
 			array(DbColumn::BIND_PARAM_STR, DbColumn::BIND_PARAM_STR)
 		);
@@ -177,12 +159,21 @@ return;
 		);
 		$this->assertTrue($success);
 
+/*	ISUEE
 		$success = $connection->insert(
 			'prueba',
 			array($connection->getDefaultIdValue(), "LOL 1", "A"),
 			null,
 			array(DbColumn::BIND_SKIP, DbColumn::BIND_PARAM_STR, DbColumn::BIND_PARAM_STR)
 		);
+*/
+		$success = $connection->insert(
+			'prueba',
+			array( "LOL 1", "A"),
+			null,
+			array( DbColumn::BIND_PARAM_STR, DbColumn::BIND_PARAM_STR)
+		);
+
 		$this->assertTrue($success);
 
 		$success = $connection->insert(
@@ -203,7 +194,7 @@ return;
 
 		$success = $connection->insert(
 			'prueba',
-			array(new Phalcon\Db\RawValue('current_date'), "A"),
+			array(new Phalcon\Db\RawValue('GETDATE()'), "A"),
 			array('nombre', 'estado'),
 			array(DbColumn::BIND_PARAM_STR, DbColumn::BIND_PARAM_STR)
 		);
@@ -228,7 +219,7 @@ return;
 
 		$success = $connection->update(
 			'prueba',
-			array("nombre"), array(new Phalcon\Db\RawValue('current_date')),
+			array("nombre"), array(new Phalcon\Db\RawValue('GETDATE()')),
 			"estado='X'",
 			array(DbColumn::BIND_PARAM_STR)
 		);
