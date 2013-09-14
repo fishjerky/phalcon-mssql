@@ -18,6 +18,7 @@
   +------------------------------------------------------------------------+
 */
 
+require "loader.php";
 class ModelsDynamicOperationsTest extends PHPUnit_Framework_TestCase
 {
 

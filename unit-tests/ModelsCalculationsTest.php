@@ -18,6 +18,7 @@
   +------------------------------------------------------------------------+
 */
 
+include "loader.php";
 class ModelsCalculationsTest extends PHPUnit_Framework_TestCase
 {
 
@@ -56,6 +57,27 @@ class ModelsCalculationsTest extends PHPUnit_Framework_TestCase
 		return $di;
 	}
 
+	public function testCalculationsMssql()
+	{
+		require 'unit-tests/config.db.php';
+		if (empty($configMssql)) {
+			$this->markTestSkipped("Skipped");
+			return;
+		}
+
+		$di = $this->_getDI();
+
+		$di->set('db', function(){
+			require 'unit-tests/config.db.php';
+			return new Twm\Db\Adapter\Pdo\Mssql($configMssql);
+		});
+
+		$this->_executeTestsNormal($di);
+		$this->_executeTestsRenamed($di);
+
+	}
+
+
 	public function testCalculationsMysql()
 	{
 		require 'unit-tests/config.db.php';
@@ -76,44 +98,6 @@ class ModelsCalculationsTest extends PHPUnit_Framework_TestCase
 
 	}
 
-	public function testCalculationsPostgresql()
-	{
-		require 'unit-tests/config.db.php';
-		if (empty($configPostgresql)) {
-			$this->markTestSkipped("Skipped");
-			return;
-		}
-
-		$di = $this->_getDI();
-
-		$di->set('db', function(){
-			require 'unit-tests/config.db.php';
-			return new Phalcon\Db\Adapter\Pdo\Postgresql($configPostgresql);
-		});
-
-		$this->_executeTestsNormal($di);
-		$this->_executeTestsRenamed($di);
-
-	}
-
-	public function testCalculationsSqlite()
-	{
-		require 'unit-tests/config.db.php';
-		if (empty($configSqlite)) {
-			$this->markTestSkipped("Skipped");
-			return;
-		}
-
-		$di = $this->_getDI();
-
-		$di->set('db', function(){
-			require 'unit-tests/config.db.php';
-			return new Phalcon\Db\Adapter\Pdo\Sqlite($configSqlite);
-		});
-
-		$this->_executeTestsNormal($di);
-		$this->_executeTestsRenamed($di);
-	}
 
 	protected function _executeTestsNormal()
 	{

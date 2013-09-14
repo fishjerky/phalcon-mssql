@@ -18,6 +18,7 @@
   +------------------------------------------------------------------------+
 */
 
+include "loader.php";
 class ModelsRelationsTest extends PHPUnit_Framework_TestCase
 {
 
@@ -57,6 +58,27 @@ class ModelsRelationsTest extends PHPUnit_Framework_TestCase
 		return $di;
 	}
 
+	public function testModelsMssql()
+	{
+		require 'unit-tests/config.db.php';
+		if (empty($configMysql)) {
+			$this->markTestSkipped("Skipped");
+			return;
+		}
+
+		$di = $this->_getDI();
+
+		$di->set('db', function(){
+			require 'unit-tests/config.db.php';
+			return new Twm\Db\Adapter\Pdo\Mssql($configMssql);
+		});
+
+		$this->_executeTestsNormal($di);
+		$this->_executeTestsRenamed($di);
+		$this->_testIssue938($di);
+	}
+
+/*
 	public function testModelsMysql()
 	{
 		require 'unit-tests/config.db.php';
@@ -76,7 +98,6 @@ class ModelsRelationsTest extends PHPUnit_Framework_TestCase
 		$this->_executeTestsRenamed($di);
 		$this->_testIssue938($di);
 	}
-
 	public function testModelsPostgresql()
 	{
 		require 'unit-tests/config.db.php';
@@ -116,7 +137,7 @@ class ModelsRelationsTest extends PHPUnit_Framework_TestCase
 		$this->_executeTestsRenamed($di);
 		$this->_testIssue938($di);
 	}
-
+*/
 	public function _executeTestsNormal($di)
 	{
 

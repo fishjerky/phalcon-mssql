@@ -18,6 +18,7 @@
   +------------------------------------------------------------------------+
 */
 
+require "loader.php";
 class ModelsHydrationTest extends PHPUnit_Framework_TestCase
 {
 
@@ -56,10 +57,10 @@ class ModelsHydrationTest extends PHPUnit_Framework_TestCase
 		return $di;
 	}
 
-	public function testModelsMysql()
+	public function testModelsMssql()
 	{
 		require 'unit-tests/config.db.php';
-		if (empty($configMysql)) {
+		if (empty($configMssql)) {
 			$this->markTestSkipped("Skipped");
 			return;
 		}
@@ -68,14 +69,14 @@ class ModelsHydrationTest extends PHPUnit_Framework_TestCase
 
 		$di->set('db', function(){
 			require 'unit-tests/config.db.php';
-			return new Phalcon\Db\Adapter\Pdo\Mysql($configMysql);
+			return new Twm\Db\Adapter\Pdo\Mssql($configMssql);
 		});
 
 		$this->_executeTestsNormal($di);
 		$this->_executeTestsRenamed($di);
 		$this->_executeTestsNormalComplex($di);
 	}
-
+/*
 	public function testModelsPostgresql()
 	{
 		require 'unit-tests/config.db.php';
@@ -115,7 +116,7 @@ class ModelsHydrationTest extends PHPUnit_Framework_TestCase
 		$this->_executeTestsRenamed($di);
 		$this->_executeTestsNormalComplex($di);
 	}
-
+*/
 	protected function _executeTestsNormal($di)
 	{
 

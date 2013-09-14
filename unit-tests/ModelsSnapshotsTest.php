@@ -18,6 +18,7 @@
   +------------------------------------------------------------------------+
 */
 
+require "loader.php";
 class ModelsSnapshotsTest extends PHPUnit_Framework_TestCase
 {
 
@@ -64,7 +65,7 @@ class ModelsSnapshotsTest extends PHPUnit_Framework_TestCase
 
 		$di->set('db', function(){
 			require 'unit-tests/config.db.php';
-			return new Phalcon\Db\Adapter\Pdo\Mysql($configMysql);
+			return new Twm\Db\Adapter\Pdo\Mssql($configMssql);
 		});
 
 		$this->_executeTestsNormal($di);

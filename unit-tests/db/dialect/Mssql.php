@@ -6,10 +6,13 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
 
 	public function limit($sqlQuery, $number){
 		$sql = preg_replace('/^SELECT\s/i', 'SELECT TOP ' . $number . ' ', $sqlQuery);
-
+		//echo PHP_EOL . $sql . PHP_EOL;
 		return $sql;
 	}
-	public function forUpdate($sqlQuery){}
+	public function forUpdate($sqlQuery){
+		$sql = $sqlQuery . ' WITH (UPDLOCK)';
+		return $sql;
+	}
 	public function shareLock($sqlQuery){}
 	Public function select($definition){
 
@@ -183,8 +186,8 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
 			/**
 			 * Check for a HAVING clause
 			 */
-			$havingConditions = $definition['having'];
-			if (isset($havingConditions)) {
+			if (isset($definition['having'])) {
+				$havingConditions = $definition['having'];
 				$sql .= " HAVING " . $this->getSqlExpression($havingConditions, $escapeChar);
 			}
 		}
@@ -192,6 +195,7 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
 		/**
 		 * Check for a ORDER clause
 		 */
+		 $sqlOrder;
 		if (isset($definition['order'])){
 			$orderFields = $definition['order'];
 			$orderItems = array();
@@ -201,21 +205,23 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
 				/**
 				 * In the numeric 1 position could be a ASC/DESC clause
 				 */
-				$sqlOrderType = $orderItem[1];
-				if (isset($sqlOrderType)) {
+				if (isset($orderItem[1])) {
+					$sqlOrderType = $orderItem[1];
 					$orderSqlItemType = $orderSqlItem . " " . $sqlOrderType;
 				} else {
 					$orderSqlItemType = $orderSqlItem;
 				}
 				$orderItems[] = $orderSqlItemType;
 			}
-			$sql .= " ORDER BY " . join(", ", $orderItems);
+			$sqlOrder =  " ORDER BY " . join(", ", $orderItems);
+			$sql .= $sqlOrder;
 		}
 
 		/**
 		 * Check for a LIMIT condition
 		 */
-		if (isset($limitValue)) {
+
+		if (isset($definition['limit'])) {
 			$limitValue = $definition["limit"];
 			if (is_array($limitValue)) {
 
@@ -223,11 +229,21 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
 
 				/**
 				 * Check for a OFFSET condition
+				 * TODO: if order caluse doesn't exist, it will take id as default order column... but can't guarantee every table has 'id' column
 				 */
 				if (isset($limitValue['offset'])) {
-					$offset = $limitValue['offset'];
-					//$sql .= " LIMIT " . $number . " OFFSET " . $offset;
-					$sql = $this->limit($sql, $number);
+					$sql = $this->limit($sql, '100 PERCENT');
+					$startIndex = $limitValue['offset'];
+					$endIndex = $startIndex + $number - 1;
+
+					$pos = strpos($sql, 'FROM'); //'FROM ';
+					if (isset($sqlOrder))
+						$sql = substr($sql, 0, $pos) .  ", ROW_NUMBER() OVER ($sqlOrder) AS rownum ". substr($sql, $pos);
+					else
+						$sql = substr($sql, 0, $pos) .  ', ROW_NUMBER() OVER (ORDER BY id) AS rownum '. substr($sql, $pos);
+
+					$sql = "SELECT * FROM   ( $sql  ) AS t
+                            WHERE  t.rownum BETWEEN $startIndex AND $endIndex";
 				} else {
 					$sql = $this->limit($sql, $number);
 				}
@@ -238,6 +254,7 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
 
 		return $sql;
 	}
+
 
 	//public function getColumnList($columnList){}
 
@@ -290,7 +307,7 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
 				}
 				break;
 			default:
-				throw new \Phalcon\Db\Exception("Unrecognized MsSQL data type: " . $column->getType());
+				throw new \Phalcon\Db\Exception("Unrecognized Mssql data type: " . $column->getType());
 		}
 		return $columnSql;
 	}
@@ -557,6 +574,7 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
 	 * @param	string table
 	 * @param	string schema
 	 * @return	string
+	 * TODO schema not finish yet
 	 */
 	public function describeIndexes($table, $schema=null)
 	{
@@ -611,11 +629,6 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
 	   public function createTable($tableName, $schemaName, $definition){}
 	   public function dropTable($tableName, $schemaName){}
 
-	   public function describeIndexes($table, $schema = null){}
-
-	   public function describeReferences($table, $schema = null){}
-
-	   public function tableOptions($table, $schema = null){}
 
 	   public function supportsSavepoints(){}
 	   public function supportsReleseSavepoints(){}

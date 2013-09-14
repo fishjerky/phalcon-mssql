@@ -112,7 +112,6 @@ class DbTest extends PHPUnit_Framework_TestCase
 		//$success = $connection->execute('INSERT INTO prueba(id, nombre, estado) VALUES ('.$connection->getDefaultIdValue().', ?, ?)', array("LOL 1", "A"));
 		$success = $connection->execute('INSERT INTO prueba( nombre, estado) VALUES ( ?, ?)', array("LOL 1", "A"));
 		$this->assertTrue($success);
-		return;
 
 		$success = $connection->execute('UPDATE prueba SET nombre = ?, estado = ?', array("LOL 11", "R"));
 		$this->assertTrue($success);
@@ -201,8 +200,7 @@ class DbTest extends PHPUnit_Framework_TestCase
 		$this->assertTrue($success);
 
 		//Transactions without savepoints.
-/*
-		$connection->setNestedTransactionsWithSavepoints(false);
+/*		$connection->setNestedTransactionsWithSavepoints(false);
 
 		$success = $connection->begin(); // level 1 - real
 		$this->assertTrue($success);
@@ -266,7 +264,7 @@ class DbTest extends PHPUnit_Framework_TestCase
 
 		$success = $connection->rollback(); // rollback - real rollback
 		$this->assertTrue($success);
-*/
+		*/
 	}
 
 }

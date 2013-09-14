@@ -18,6 +18,7 @@
   +------------------------------------------------------------------------+
 */
 
+require "loader.php";
 class ModelsMultipleSourcesTest extends PHPUnit_Framework_TestCase
 {
 
@@ -59,7 +60,7 @@ class ModelsMultipleSourcesTest extends PHPUnit_Framework_TestCase
 
 		$di->set('dbOne', function() {
 			require 'unit-tests/config.db.php';
-			return new Phalcon\Db\Adapter\Pdo\Mysql($configMysql);
+			return new Twm\Db\Adapter\Pdo\Mssql($configMssql);
 		});
 
 		$di->set('dbTwo', function() {

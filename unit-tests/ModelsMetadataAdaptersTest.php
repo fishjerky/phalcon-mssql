@@ -156,7 +156,7 @@ class ModelsMetadataAdaptersTest extends PHPUnit_Framework_TestCase
 			'$PMM$my-local-app' => $this->_data
 		);
 
-		$this->assertEquals($_SESSION, $expectedSession);
+		$this->assertEquals($expectedSession, $_SESSION);
 
 		$this->assertFalse($metaData->isEmpty());
 

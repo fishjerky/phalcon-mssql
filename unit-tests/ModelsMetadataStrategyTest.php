@@ -17,7 +17,7 @@
   |          Eduar Carvajal <eduar@phalconphp.com>                         |
   +------------------------------------------------------------------------+
 */
-
+include "loader.php";
 class ModelsMetadataStrategyTest extends PHPUnit_Framework_TestCase
 {
 
@@ -94,7 +94,8 @@ class ModelsMetadataStrategyTest extends PHPUnit_Framework_TestCase
 
 		$di['db'] = function() {
 			require 'unit-tests/config.db.php';
-			return new Phalcon\Db\Adapter\Pdo\Mysql($configMysql);
+			return new Twm\Db\Adapter\Pdo\Mssql($configMssql);
+			//return new Phalcon\Db\Adapter\Pdo\Mysql($configMysql);
 		};
 
 		$di['annotations'] = function() {

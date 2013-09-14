@@ -80,7 +80,7 @@ class ModelsTest extends PHPUnit_Framework_TestCase
 		});
 
 		$this->_executeTestsNormal($di);
-		//$this->_executeTestsRenamed($di);
+		$this->_executeTestsRenamed($di);
 	}
 
 	public function testModelsMysql()
@@ -103,11 +103,9 @@ class ModelsTest extends PHPUnit_Framework_TestCase
 
 
 	protected function _executeTestsNormal($di){
-
 		$this->_prepareDb($di->getShared('db'));
 
 		//Count tests
-/*
 		$this->assertEquals(People::count(), Personas::count());
 		$params = array();
 		$this->assertEquals(People::count($params), Personas::count($params));
@@ -120,7 +118,7 @@ class ModelsTest extends PHPUnit_Framework_TestCase
 
 		$params = array("conditions" => "estado='I'");
 		$this->assertEquals(People::count($params), Personas::count($params));
-*/
+
 		//Find first
 		$people = People::findFirst();
 		$this->assertTrue(is_object($people));
@@ -270,6 +268,9 @@ class ModelsTest extends PHPUnit_Framework_TestCase
 		$this->assertNotEquals($persona, false);
 		$this->assertEquals($persona->nombres, 'LOST LOST');
 		$this->assertEquals($persona->estado, 'X');
+
+		//Check Insert with default
+		$this->assertEquals($persona->fecha_nacimiento, '1970-01-01');
 
 		//Update
 		$persona->cupo = 150000;

@@ -19,7 +19,7 @@
 */
 
 use Phalcon\Mvc\Model\Query\Builder as Builder;
-
+include "loader.php";
 class ModelsQueryBuilderTest extends PHPUnit_Framework_TestCase
 {
 
@@ -59,7 +59,7 @@ class ModelsQueryBuilderTest extends PHPUnit_Framework_TestCase
 
 		$di->set('db', function(){
 			require 'unit-tests/config.db.php';
-			return new Phalcon\Db\Adapter\Pdo\Mysql($configMysql);
+			return new Twm\Db\Adapter\Pdo\Mssql($configMssql);
 		});
 
 		return $di;

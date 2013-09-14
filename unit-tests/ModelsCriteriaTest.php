@@ -17,7 +17,7 @@
   |          Eduar Carvajal <eduar@phalconphp.com>                         |
   +------------------------------------------------------------------------+
 */
-
+require "loader.php";
 class ModelsCriteriaTest extends PHPUnit_Framework_TestCase
 {
 
@@ -55,7 +55,26 @@ class ModelsCriteriaTest extends PHPUnit_Framework_TestCase
 
 		return $di;
 	}
+	public function testModelsMssql()
+	{
+		require 'unit-tests/config.db.php';
+		if (empty($configMysql)) {
+			$this->markTestSkipped("Skipped");
+			return;
+		}
 
+		$di = $this->_getDI();
+
+		$di->set('db', function(){
+			require 'unit-tests/config.db.php';
+			return new Twm\Db\Adapter\Pdo\Mssql($configMssql);
+		});
+
+		$this->_executeTestsNormal($di);
+		$this->_executeTestsRenamed($di);
+		$this->_executeTestsFromInput($di);
+	}
+/*
 	public function testModelsMysql()
 	{
 		require 'unit-tests/config.db.php';
@@ -115,9 +134,25 @@ class ModelsCriteriaTest extends PHPUnit_Framework_TestCase
 		$this->_executeTestsRenamed($di);
 		$this->_executeTestsFromInput($di);
 	}
-
+*/
 	protected function _executeTestsNormal($di)
 	{
+		$personas = Personas::query()
+			->where("estado=?1")
+			->bind(array(1 => "A"))
+			->order("nombres")
+			->limit(100, 10)
+			->execute();
+
+		return;
+		$people = People::find(array(
+			"estado=?1",
+			"bind" => array(1 => "A"),
+			"order" => "nombres",
+			"limit" => array('number' => 100, 'offset' => 10)
+		));
+		$this->assertEquals(count($personas), count($people));
+		return;
 
 		$personas = Personas::query()->where("estado='I'")->execute();
 		$people = People::find("estado='I'");

@@ -18,6 +18,7 @@
   +------------------------------------------------------------------------+
 */
 
+require "loader.php";
 function sqlite_now()
 {
 	return date('Y-m-d H:i:s');
@@ -61,6 +62,25 @@ class ModelsValidatorsTest extends PHPUnit_Framework_TestCase
 		return $di;
 	}
 
+	public function testValidatorsMssql()
+	{
+		require 'unit-tests/config.db.php';
+		if (empty($configMysql)) {
+			$this->markTestSkipped("Skipped");
+			return;
+		}
+
+		$di = $this->_getDI();
+
+		$di->set('db', function(){
+			require 'unit-tests/config.db.php';
+			return new Twm\Db\Adapter\Pdo\Mssql($configMssql);
+		});
+
+		$this->_testValidatorsNormal($di);
+		$this->_testValidatorsRenamed($di);
+	}
+/*
 	public function testValidatorsMysql()
 	{
 		require 'unit-tests/config.db.php';
@@ -119,7 +139,7 @@ class ModelsValidatorsTest extends PHPUnit_Framework_TestCase
 		$this->_testValidatorsNormal($di);
 		$this->_testValidatorsRenamed($di);
 	}
-
+*/
 	protected function _testValidatorsNormal($di)
 	{
 
@@ -128,7 +148,7 @@ class ModelsValidatorsTest extends PHPUnit_Framework_TestCase
 		$success = $connection->delete("subscriptores");
 		$this->assertTrue($success);
 
-		$createdAt = new Phalcon\Db\RawValue('now()');
+		$createdAt = new Phalcon\Db\RawValue('GETDATE()');	//TODO now()
 
 		//Save with success
 		$subscriptor = new Subscriptores();
@@ -234,7 +254,7 @@ class ModelsValidatorsTest extends PHPUnit_Framework_TestCase
 		$success = $connection->delete("subscriptores");
 		$this->assertTrue($success);
 
-		$createdAt = new Phalcon\Db\RawValue('now()');
+		$createdAt = new Phalcon\Db\RawValue('GETDATE()');	//TODO now()
 
 		//Save with success
 		$abonne = new Abonnes();

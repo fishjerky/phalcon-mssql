@@ -18,6 +18,7 @@
   +------------------------------------------------------------------------+
 */
 
+include "loader.php";
 class ModelsRelationsMagicTest extends PHPUnit_Framework_TestCase
 {
 
@@ -57,6 +58,21 @@ class ModelsRelationsMagicTest extends PHPUnit_Framework_TestCase
 		return $di;
 	}
 
+	public function testModelsMssql()
+	{
+
+		$di = $this->_getDI();
+
+		require 'unit-tests/config.db.php';
+		$connection =  new Twm\Db\Adapter\Pdo\Mssql($configMssql);
+
+		$di->set('db', $connection);
+
+		$this->_executeQueryRelated();
+		$this->_executeSaveRelatedBelongsTo($connection);
+	}
+
+/*
 	public function testModelsMysql()
 	{
 
@@ -71,7 +87,7 @@ class ModelsRelationsMagicTest extends PHPUnit_Framework_TestCase
 		$this->_executeSaveRelatedBelongsTo($connection);
 	}
 
-	/*public function testModelsPostgresql()
+	public function testModelsPostgresql()
 	{
 
 		$di = $this->_getDI();

@@ -18,6 +18,7 @@
   +------------------------------------------------------------------------+
 */
 
+require "loader.php";
 class ModelsFindersTest extends PHPUnit_Framework_TestCase
 {
 

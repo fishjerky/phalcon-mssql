@@ -18,6 +18,7 @@
   +------------------------------------------------------------------------+
 */
 
+include "loader.php";
 class ModelsResultsetTest extends PHPUnit_Framework_TestCase
 {
 
@@ -56,10 +57,10 @@ class ModelsResultsetTest extends PHPUnit_Framework_TestCase
 		return $di;
 	}
 
-	protected function _prepareTestMysql()
+	protected function _prepareTestMssql()
 	{
 		require 'unit-tests/config.db.php';
-		if (empty($configMysql)) {
+		if (empty($configMssql)) {
 			return false;
 		}
 
@@ -67,46 +68,45 @@ class ModelsResultsetTest extends PHPUnit_Framework_TestCase
 
 		$di->set('db', function(){
 			require 'unit-tests/config.db.php';
-			return new Phalcon\Db\Adapter\Pdo\Mysql($configMysql);
+			return new Twm\Db\Adapter\Pdo\Mssql($configMssql);
 		});
 
 		return true;
 	}
-
-	protected function _prepareTestPostgresql()
+	public function testResultsetNormalMssql()
 	{
-		require 'unit-tests/config.db.php';
-		if (empty($configPostgresql)) {
-			return false;
+		if (!$this->_prepareTestMssql()) {
+			$this->markTestSkipped("Skipped");
+			return;
 		}
 
-		$di = $this->_getDI();
+		$robots = Robots::find(array(
+			'order' => 'id'
+		));
 
-		$di->set('db', function(){
-			require 'unit-tests/config.db.php';
-			return new Phalcon\Db\Adapter\Pdo\Postgresql($configPostgresql);
-		});
-
-		return true;
+		$this->_applyTests($robots);
 	}
 
-	protected function _prepareTestSqlite()
+	public function testResultsetBindingMssql()
 	{
-		require 'unit-tests/config.db.php';
-		if (empty($configSqlite)) {
-			return false;
+		if (!$this->_prepareTestMssql()) {
+			$this->markTestSkipped("Skipped");
+			return;
 		}
 
-		$di = $this->_getDI();
+		$initialId = 0;
+		$finalId = 4;
 
-		$di->set('db', function(){
-			require 'unit-tests/config.db.php';
-			return new Phalcon\Db\Adapter\Pdo\Sqlite($configSqlite);
-		});
+		$robots = Robots::find(array(
+			'conditions' => 'id > :id1: and id < :id2:',
+			'bind' => array('id1' => $initialId, 'id2' => $finalId),
+			'order' => 'id'
+		));
 
-		return true;
+		$this->_applyTests($robots);
 	}
 
+/*
 	public function testResultsetNormalMysql()
 	{
 		if (!$this->_prepareTestMysql()) {
@@ -201,7 +201,7 @@ class ModelsResultsetTest extends PHPUnit_Framework_TestCase
 
 		$this->_applyTests($robots);
 	}
-
+*/
 	public function _applyTests($robots)
 	{
 
@@ -301,7 +301,52 @@ class ModelsResultsetTest extends PHPUnit_Framework_TestCase
 		$this->assertFalse(isset($personas[40]));
 
 	}
+	public function testSerializeNormalMssql()
+	{
+		require 'unit-tests/config.db.php';
+		if (empty($configMysql)) {
+			$this->markTestSkipped("Skipped");
+			return;
+		}
 
+		$this->_prepareTestMssql();
+
+		$data = serialize(Robots::find(array('order' => 'id')));
+
+		$robots = unserialize($data);
+
+		$this->assertEquals(get_class($robots), 'Phalcon\Mvc\Model\Resultset\Simple');
+
+		$this->_applyTests($robots);
+
+	}
+
+	public function testSerializeBindingsMssql()
+	{
+		if (!$this->_prepareTestMssql()) {
+			$this->markTestSkipped("Skipped");
+			return;
+		}
+
+		$initialId = 0;
+		$finalId = 4;
+
+		$data = serialize(Robots::find(array(
+			'conditions' => 'id > :id1: and id < :id2:',
+			'bind' => array('id1' => $initialId, 'id2' => $finalId),
+			'order' => 'id'
+		)));
+
+		$robots = unserialize($data);
+
+		$this->assertEquals(get_class($robots), 'Phalcon\Mvc\Model\Resultset\Simple');
+
+		$this->_applyTests($robots);
+
+	}
+
+
+/*
 	public function testSerializeNormalMysql()
 	{
 		require 'unit-tests/config.db.php';
@@ -484,10 +529,10 @@ class ModelsResultsetTest extends PHPUnit_Framework_TestCase
 		$this->_applyTestsBig($personas);
 
 	}
-
+*/
 	public function testResultsetNormalZero()
 	{
-		if (!$this->_prepareTestMysql()) {
+		if (!$this->_prepareTestMssql()) {
 			$this->markTestSkipped("Skipped");
 			return;
 		}
