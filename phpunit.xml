@@ -11,8 +11,11 @@ stopOnFailure="false"
 syntaxCheck="false">
 	<testsuites>
 		<testsuite name="Phalcon PHP Framework">
-			<file>unit-tests/ModelsQueryExecuteTest.php</file>  paging 
+			<file>unit-tests/PlaygroundTest.php</file>
 <!--						not done 
+			<file>unit-tests/ModelsQueryExecuteTest.php</file>
+            <file>unit-tests/PaginatorTest.php</file> restore db and try again
+
 			<file>unit-tests/DbTest.php</file>
 			<file>unit-tests/ModelsForeignKeysTest.php</file>
 			<file>unit-tests/ModelsTransactionsTest.php</file>
@@ -29,20 +32,20 @@ syntaxCheck="false">
 -->
 			<!-- ORM tests / First Part -->
 <!--	
+			<file>unit-tests/ModelsResultsetTest.php</file>
 			<file>unit-tests/ModelsCriteriaTest.php</file>
 			<file>unit-tests/ModelsTest.php</file>
 			<file>unit-tests/ModelsMetadataTest.php</file>
 			<file>unit-tests/ModelsMetadataAdaptersTest.php</file>
 			<file>unit-tests/ModelsCalculationsTest.php</file>
-			<file>unit-tests/ModelsResultsetTest.php</file>
 			<file>unit-tests/ModelsValidatorsTest.php</file>
 			<file>unit-tests/ModelsMetadataStrategyTest.php</file>
 			<file>unit-tests/ModelsQueryBuilderTest.php</file>
 			<file>unit-tests/ModelsHydrationTest.php</file>
 
 			don't care 
-			<file>unit-tests/ModelsMetadataManualTest.php</file>
 			<file>unit-tests/ModelsQueryParsingTest.php</file>
+			<file>unit-tests/ModelsMetadataManualTest.php</file>
 			<file>unit-tests/ModelsEventsTest.php</file>
 			<file>unit-tests/ModelsBehaviorsTest.php</file>
 			<file>unit-tests/ModelsMultipleSourcesTest.php</file>

@@ -23,7 +23,7 @@
 			'host'          => 'McDev',  
 			'username'      => 'apnewmc',
 			'password'      => 'Cm!2212@12', 
-			'dbname'        => 'CCCMCDEV1',
+			'dbname'        => 'CCCMCDEV2',
 			'dialectClass'  => '\Twm\Db\Dialect\Mssql',       
 			'pdoType'       => 'dblib'
 			);   

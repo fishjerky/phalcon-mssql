@@ -4,7 +4,7 @@ if (!file_exists('unit-tests/config.db.local.php')) {
 	$configMysql = array(
 			'host' => 'localhost',
 			'username' => 'root',
-			'password' => '',
+			'password' => 'ok123456',
 			'dbname' => 'phalcon_test'
 			);
 

@@ -19,6 +19,7 @@
 */
 
 use Phalcon\Mvc\Model\Query as Query;
+include "loader.php";
 
 class ModelsQueryParsingTest extends PHPUnit_Framework_TestCase
 {
@@ -59,7 +60,8 @@ class ModelsQueryParsingTest extends PHPUnit_Framework_TestCase
 
 		$di->set('db', function(){
 			require 'unit-tests/config.db.php';
-			return new Phalcon\Db\Adapter\Pdo\Mysql($configMysql);
+			return new Twm\Db\Adapter\Pdo\Mssql($configMssql);
+			//return new Phalcon\Db\Adapter\Pdo\Mysql($configMysql);
 		});
 
 		return $di;
