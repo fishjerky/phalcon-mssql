@@ -1,6 +1,6 @@
 <?php
 
-if (!file_exists('unit-tests/config.db.local.php')) {
+if (file_exists('unit-tests/config.db.local.php')) {
 	$configMysql = array(
 			'host' => 'localhost',
 			'username' => 'root',

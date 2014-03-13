@@ -67,7 +67,7 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
 
         //2.get column description
         $dialect = $this->_dialect;
-        $describe = $this->fetchAll($dialect->describeColumns($table, $schema), Phalcon\Db::FETCH_ASSOC);
+        $describe = $this->fetchAll($dialect->describeColumns($table, $schema), \Phalcon\Db::FETCH_ASSOC);
 
         $oldColumn = null;
         $sizePattern = "#\\(([0-9]+)(,[0-9]+)*\\)#";
@@ -192,7 +192,7 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
             $columnName = $field['COLUMN_NAME'];
             //echo $columnName  . PHP_EOL;
             //print_r($definition);
-            $columns[] = new Phalcon\Db\Column($columnName, $definition);
+            $columns[] = new \Phalcon\Db\Column($columnName, $definition);
             $oldColumn = $columnName;
         }
 
@@ -250,7 +250,6 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
             //sql server(dblib) does not accept " as escaper
             $sql = str_replace('"', '', $sql);
         }
-
         return parent::query($sql, $bindParams, $bindTypes);
 
     }
@@ -272,22 +271,14 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
         return $dialect->limit($sqlQuery, $number);
     }
 
-   public function sharedLock($sqlQuery)
-   {
-       echo "sdfsdfr";
-       exit();
-        $dialect = $this->_dialect;
-        return $dialect->sharedLock($sqlQuery);
-   }
-
 
     //insert miss parameters, need to do this
-    public function executePrepared(\PDOStatement $statement, $placeholders, $dataTypes)
+    public function executePrepared($statement, $placeholders, $dataTypes)
     {
         //return $this->_pdo->prepare($statement->queryString, $placeholders);//not working
 
         if (!is_array($placeholders)) {
-            throw new Phalcon\Db\Exception("Placeholders must be an array");
+            throw new \Phalcon\Db\Exception("Placeholders must be an array");
         }
 
         foreach ($placeholders as $wildcard => $value) {
@@ -299,13 +290,13 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
                 if (is_string($wildcard)) {
                     $parameter = $wildcard;
                 } else {
-                    throw new Phalcon\Db\Exception("Invalid bind parameter");
+                    throw new \Phalcon\Db\Exception("Invalid bind parameter");
                 }
             }
 
             if (is_array($dataTypes) && !empty($dataTypes)) {
                 if (!isset($dataTypes[$wildcard])) {
-                    throw new Phalcon\Db\Exception("Invalid bind type parameter");
+                    throw new \Phalcon\Db\Exception("Invalid bind type parameter");
                 }
                 $type = $dataTypes[$wildcard];
 
@@ -313,9 +304,9 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
                  * The bind type is double so we try to get the double value
                  */
                 $castValue;
-                if ($type == Phalcon\Db\Column::BIND_PARAM_DECIMAL) {
+                if ($type == \Phalcon\Db\Column::BIND_PARAM_DECIMAL) {
                     $castValue = doubleval($value);
-                    $type = Phalcon\Db\Column::BIND_SKIP;
+                    $type = \Phalcon\Db\Column::BIND_SKIP;
                 } else {
                     $castValue = $value;
                 }
@@ -323,7 +314,7 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
                 /**
                  * 1024 is ignore the bind type
                  */
-                if ($type == Phalcon\Db\Column::BIND_SKIP) {
+                if ($type == \Phalcon\Db\Column::BIND_SKIP) {
                     $statement->bindParam($parameter, $castValue);
                     $statement->bindValue($parameter, $castValue);
                 } else {
@@ -358,14 +349,14 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
         $insertSql;
 
         if (!is_array($values)) {
-            throw new Phalcon\Db\Exception("The second parameter for insert isn't an Array");
+            throw new \Phalcon\Db\Exception("The second parameter for insert isn't an Array");
         }
 
         /**
          * A valid array with more than one element is required
          */
         if (!count($values)) {
-            throw new Phalcon\Db\Exception("Unable to insert into " . $table . " without data");
+            throw new \Phalcon\Db\Exception("Unable to insert into " . $table . " without data");
         }
 
         $placeholders = array();
@@ -392,7 +383,7 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
                     $insertValues[] = $value;
                     if (is_array($dataTypes)) {
                         if (!isset($dataTypes[$position])) {
-                            throw new Phalcon\Db\Exception("Incomplete number of bind types");
+                            throw new \Phalcon\Db\Exception("Incomplete number of bind types");
                         }
                         $bindType = $dataTypes[$position];
                         $bindDataTypes[] = $bindType;
@@ -453,7 +444,7 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
         foreach ($values as $position => $value) {
 
             if (!isset($fields[$position])) {
-                throw new Phalcon\Db\Exception("The number of values in the update is not the same as fields");
+                throw new \Phalcon\Db\Exception("The number of values in the update is not the same as fields");
             }
             $field = $fields[$position];
 
@@ -472,7 +463,7 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
                     $updateValues[] = $value;
                     if (is_array($dataTypes)) {
                         if (!isset($dataTypes[$position])) {
-                            throw new Phalcon\Db\Exception("Incomplete number of bind types");
+                            throw new \Phalcon\Db\Exception("Incomplete number of bind types");
                         }
                         $bindType = $dataTypes[$position];
                         $bindDataTypes[] = $bindType;
@@ -506,7 +497,7 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
                  * Array conditions may have bound params and bound types
                  */
                 if (!is_array($whereCondition)) {
-                    throw new Phalcon\Db\Exception("Invalid WHERE clause conditions");
+                    throw new \Phalcon\Db\Exception("Invalid WHERE clause conditions");
                 }
 
                 /**
@@ -595,7 +586,7 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
         $dialect = $this->_dialect;
 
         $indexes = array();
-        $temps = $this->fetchAll($dialect->describeIndexes($table, $schema), Phalcon\Db::FETCH_ASSOC);
+        $temps = $this->fetchAll($dialect->describeIndexes($table, $schema), \Phalcon\Db::FETCH_ASSOC);
         foreach ($temps as $index) {
             $keyName = $index['index_id'];
             if (!isset($indexes[$keyName])) {
@@ -611,7 +602,7 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
             /**
              * Every index is abstracted using a Phalcon\Db\Index instance
              */
-            $indexObjects[$name] = new Phalcon\Db\Index($name, $indexColumns);
+            $indexObjects[$name] = new \Phalcon\Db\Index($name, $indexColumns);
         }
 
         return $indexObjects;
@@ -636,7 +627,7 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
         $emptyArr = array();
         $references = array();
 
-        $temps = $this->fetchAll($dialect->describeReferences($table, $schema), Phalcon\Db::FETCH_NUM);
+        $temps = $this->fetchAll($dialect->describeReferences($table, $schema), \Phalcon\Db::FETCH_NUM);
         foreach ($temps as $reference) {
 
             $constraintName = $reference[2];
@@ -655,7 +646,7 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
 
         $referenceObjects = array();
         foreach ($references as $name => $arrayReference) {
-            $referenceObjects[$name] = new Phalcon\Db\Reference($name, array(
+            $referenceObjects[$name] = new \Phalcon\Db\Reference($name, array(
                         "referencedSchema"	=> $arrayReference["referencedSchema"],
                         "referencedTable"	=> $arrayReference["referencedTable"],
                         "columns"			=> $arrayReference["columns"],
@@ -682,7 +673,7 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
         $dialect = $this->_dialect;
         $sql = $dialect->tableOptions($tableName, $schemaName);
         if ($sql) {
-            $describe = $this->fetchAll($sql, Phalcon\DB::FETCH_NUM);
+            $describe = $this->fetchAll($sql, \Phalcon\DB::FETCH_NUM);
             return $describe[0];
         }
         return array();
@@ -749,7 +740,7 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
      * It is necessary to override the abstract PDO transaction functions here, as
      * the PDO driver for MSSQL does not support transactions.
      */
-    public function begin()
+    public function begin($nesting = false)
     {
         //						$this->execute('SET QUOTED_IDENTIFIER OFF');
         //						$this->execute('SET NOCOUNT OFF');
@@ -763,7 +754,7 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
      * It is necessary to override the abstract PDO transaction functions here, as
      * the PDO driver for MSSQL does not support transactions.
      */
-    public function commit()
+    public function commit($nesting = false)
     {
         $this->execute('COMMIT TRANSACTION');
         return true;
@@ -775,7 +766,7 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
      * It is necessary to override the abstract PDO transaction functions here, as
      * the PDO driver for MSSQL does not support transactions.
      */
-    public function rollBack()
+    public function rollBack($nesting = false)
     {
         $this->execute('ROLLBACK TRANSACTION');
         return true;

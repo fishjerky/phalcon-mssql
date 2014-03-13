@@ -22,7 +22,7 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
          return $sql;
     }
 
-/*
+    /*
     public function getSqlTable($tables, $escapeChar = "\"")
     {
         if (!is_array($tables))
@@ -41,14 +41,15 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
         $result = "$domain.$name";
         return $result;
     }
-*/
+    */
 
-    function escaping($item, $escapeChar)
+    protected function escaping($item, $escapeChar)
     {
-        if (is_array($escapeChar))
+        if (is_array($escapeChar)) {
             return $escapeChar[0] . $item . $escapeChar[1];
-        else
+        } else {
             return $escapeChar . $item . $escapeChar;
+        }
     }
 
     public function select($definition)
@@ -197,11 +198,13 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
             $tablesSql = $tables;
         }
 
-        $sql = "SELECT " . $columnsSql . " FROM " . $tablesSql;
+        $sql = "SELECT $columnsSql FROM $tablesSql ";
+        
 
         /**
          * Check for joins
          */
+         $sqlJoins = '';
         if (isset($definition['joins'])) {
             $joins = $definition['joins'];
             foreach ($joins as $join) {
@@ -223,25 +226,28 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
                         $sqlJoin .= " ON " . join(" AND ", $joinExpressions) . " ";
                     }
                 }
-                $sql .= $sqlJoin;
+                $sqlJoins .= $sqlJoin;
+
             }
         }
 
         /**
          * Check for a WHERE clause
          */
+         $sqlWhere = '';
         if (isset($definition['where'])) {
             $whereConditions = $definition['where'];
             if (is_array($whereConditions)) {
-                $sql .= " WHERE " . $this->getSqlExpression($whereConditions, $escapeChar);
+                $sqlWhere .= " WHERE " . $this->getSqlExpression($whereConditions, $escapeChar);
             } else {
-                $sql .= " WHERE " . $whereConditions;
+                $sqlWhere .= " WHERE " . $whereConditions;
             }
         }
 
         /**
          * Check for a GROUP clause
          */
+         $sqlGroup = '';
         if (isset($definition['group'])) {
             $groupFields = $definition['group'];
 
@@ -249,22 +255,24 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
             foreach ($groupFields as $groupField) {
                 $groupItems[] = $this->getSqlExpression($groupField, $escapeChar);
             }
-            $sql .= " GROUP BY " . join(", ", $groupItems);
+            $sqlGroup = " GROUP BY " . join(", ", $groupItems);
 
             /**
              * Check for a HAVING clause
              */
             if (isset($definition['having'])) {
                 $havingConditions = $definition['having'];
-                $sql .= " HAVING " . $this->getSqlExpression($havingConditions, $escapeChar);
+                $sqlGroup .= " HAVING " . $this->getSqlExpression($havingConditions, $escapeChar);
             }
         }
 
         /**
          * Check for a ORDER clause
          */
-        $sqlOrder;
+        $sqlOrder = '';
+        $nolockTokens = array('guid','dev_id');
         if (isset($definition['order'])) {
+            $nolock = false;
             $orderFields = $definition['order'];
             $orderItems = array();
             foreach ($orderFields as $orderItem) {
@@ -279,10 +287,28 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
                 } else {
                     $orderSqlItemType = $orderSqlItem;
                 }
-                $orderItems[] = $orderSqlItemType;
+
+                //check nolock
+                if (in_array(strtolower($orderItem[0]['name']), $nolockTokens)) {
+                    $nolock = true;
+                } else {
+                    $orderItems[] = $orderSqlItemType;
+                }
+
             }
-            $sqlOrder =  " ORDER BY " . join(", ", $orderItems);
-            $sql .= $sqlOrder;
+            if (count($orderItems)) {
+                $sqlOrder =  " ORDER BY " . join(", ", $orderItems);
+            }
+
+            if ($nolock) {
+                $sql .= " with (nolock) ";
+            }
+
+        }
+
+        $sql .= $sqlJoins . $sqlWhere . $sqlGroup . $sqlOrder;
+        if (empty($sqlOrder)) {
+            $sqlOrder == null;  //side effect, limit clause need =>  if (isset($sqlOrder) && !empty($sqlOrder))
         }
 
         /**
@@ -302,14 +328,15 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
                     $pos = strpos($sql, 'FROM');
                     $table = substr($sql, $pos + 4); //4 = FROM
                     $countPos = strpos($sql, 'COUNT');
-                    if ($countPos){
+                    if ($countPos) {
                         //if COUNT, take 'id' as default column, unless you have 'order'
-                        if (isset($sqlOrder)) 
+                        if (isset($sqlOrder) && !empty($sqlOrder)) {
                             $sql = substr($sql, 0, $countPos) .  " *, ROW_NUMBER() OVER ($sqlOrder) AS rownum FROM $table";
-                        else
-                            $sql = substr($sql, 0, $countPos ) . " *, ROW_NUMBER() OVER (Order By (SELECT COL_NAME(OBJECT_ID('{$selectedTables[0]}'), 1))) AS rownum FROM $table";
+                        } else {
+                            $sql = substr($sql, 0, $countPos) . " *, ROW_NUMBER() OVER (Order By (SELECT COL_NAME(OBJECT_ID('{$selectedTables[0]}'), 1))) AS rownum FROM $table";
+                        }
                     } else {
-                        if (isset($sqlOrder)) {
+                        if (isset($sqlOrder) && !empty($sqlOrder)) {
                             $sql = substr($sql, 0, $pos) .  ", ROW_NUMBER() OVER ($sqlOrder) AS rownum FROM $table";
                         } else {
                             //if order is not giving, it will take first selected column for order.

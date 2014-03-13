@@ -21,11 +21,12 @@ Installation Instructions :
 			)
 		);
     3. Change the following :
-$descriptor['pdoType']}:host={$descriptor['host']};dbname={$descriptor['dbname']}"
+	$descriptor['pdoType']}:host={$descriptor['host']};dbname={$descriptor['dbname']}
 
-to :
+	to :
 
     "{$descriptor['pdoType']}:server={$descriptor['host']};database={$descriptor['dbname']}"
+
 Also you need to make sure 'sqlsrv' is set for $config->database->pdoType. 
 
 Upcoming Release :
@@ -35,12 +36,16 @@ Please Note :
 
 The adapter works but a few problems still exist.
 
-Some issues
+Issues
     1. scaling?
     2. transaction
 	can only run single transaction
+    3.about nolock hint
+	I have no idea how PDO using nolock hint, so I add a trigger while ordering with guid or id, it will add nolock inside the sql statement. You may change the keyword at #273 test/app/library/db/dialect/Mssql.php:
+	$nolockTokens = array('guid','dev_id');   
 
-some test case did not pass
+Unit Test
+    Some test cases did not pass
     -ModelsQueryExecuteTest.php
 	-group by 1
         -table Abonnes does not exist - Line 781
