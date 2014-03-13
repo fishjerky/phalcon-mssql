@@ -270,7 +270,7 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
          * Check for a ORDER clause
          */
         $sqlOrder = '';
-        $nolockTokens = array('guid','dev_id');
+        $nolockTokens = array('id');	//token to trigger nolock hint 
         if (isset($definition['order'])) {
             $nolock = false;
             $orderFields = $definition['order'];

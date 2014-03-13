@@ -41,9 +41,8 @@ Issues
     2. transaction
 	can only run single transaction
     3.about nolock hint
-	I have no idea how PDO using nolock hint, so I add a trigger while ordering with guid or id, it will add nolock inside the sql statement. You may change the keyword at #273 test/app/library/db/dialect/Mssql.php:
-	$nolockTokens = array('guid','dev_id');   
-
+	I have no idea how PDO using nolock hint, so I add a trigger while ordering with id, it will add nolock inside the sql statement. You may change the token at https://github.com/fishjerky/phalcon-mssql/blob/master/test/app/library/db/dialect/Mssql.php#L273	
+	$nolockTokens = array('id');   //token to trigger nolock hint
 Unit Test
     Some test cases did not pass
     -ModelsQueryExecuteTest.php
