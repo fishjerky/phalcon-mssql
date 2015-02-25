@@ -6,7 +6,7 @@ phalcon-mssql
 A Phalcon PHP Framework MSSQL pdo db adapter.
 
 ## Requirements :
-    - Phalcon >= 1.2.0 and <=1.2.4
+    - Phalcon >= 1.2.0 and <=1.3.x
 
 ## Installation Instructions :
 1. copy "test/app/library/db" folder to your library folder

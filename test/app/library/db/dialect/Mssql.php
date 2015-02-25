@@ -6,7 +6,8 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
 
     public function limit($sqlQuery, $number)
     {
-        $sql = preg_replace('/^SELECT\s/i', 'SELECT TOP ' . $number . ' ', $sqlQuery);
+
+        $sql = preg_replace('/^SELECT\s/i', 'SELECT TOP ' . $number['value'] . ' ', $sqlQuery);
         return $sql;
     }
 
@@ -270,7 +271,7 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
          * Check for a ORDER clause
          */
         $sqlOrder = '';
-        $nolockTokens = array('id');	//token to trigger nolock hint 
+        $nolockTokens = array('guid','dev_id'); //token to trigger no lock hint. you may change tokens
         if (isset($definition['order'])) {
             $nolock = false;
             $orderFields = $definition['order'];
@@ -318,11 +319,17 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
         if (isset($definition['limit'])) {
             $limitValue = $definition["limit"];
             if (is_array($limitValue)) {
+		
                 $number = $limitValue["number"];
+            	if (is_array($number))	//phalcon > 1.3 
+			$number = $number['value'];
 
-                if (isset($limitValue['offset'])) {
+		$offset = $limitValue['offset'];
+                if (isset($offset)) {
+            	    if (is_array($offset)) 
+		        $offset = $offset['value'];
                     $sql = $this->limit($sql, '100 PERCENT');
-                    $startIndex = $limitValue['offset'] + 1;//index start from 1
+                    $startIndex = $offset + 1;//index start from 1
                     $endIndex = $startIndex + $number - 1;
 
                     $pos = strpos($sql, 'FROM');
@@ -747,7 +754,7 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
         return $sql;
     }
 
-    /*
+    
        public function addForeignKey($tableName, $schemaName, $reference){}
        public function dropForeignKey($tableName, $schemaName, $referenceName){}
 
@@ -761,5 +768,5 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
        public function createSavepoint($name){}
        public function releaseSavepoint($name){}
        public function rollbackSavepoint($name){}
-     */
+     
 }
