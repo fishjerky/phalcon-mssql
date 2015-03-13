@@ -6,8 +6,12 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
 
     public function limit($sqlQuery, $number)
     {
-
-        $sql = preg_replace('/^SELECT\s/i', 'SELECT TOP ' . $number['value'] . ' ', $sqlQuery);
+	if (is_array($number)) {
+		$sql = preg_replace('/^SELECT\s/i', 'SELECT TOP ' . $number['value'] . ' ', $sqlQuery);
+	}
+	else {
+		$sql = preg_replace('/^SELECT\s/i', 'SELECT TOP ' . $number . ' ', $sqlQuery);
+	}
         return $sql;
     }
 
