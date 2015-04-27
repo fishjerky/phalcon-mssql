@@ -16,13 +16,11 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
         return $sql;
     }
 
+    /*
     public function shareLock($sqlQuery)
     {
-         $sql = $sqlQuery . ' WITH (NOLOCK) ';
-         return $sql;
     }
 
-    /*
     public function getSqlTable($tables, $escapeChar = "\"")
     {
         if (!is_array($tables))
@@ -54,7 +52,6 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
 
     public function select($definition)
     {
-
         $tables;
         $columns;
         $escapeChar;
@@ -198,7 +195,7 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
             $tablesSql = $tables;
         }
 
-        $sql = "SELECT $columnsSql FROM $tablesSql ";
+        $sql = "SELECT $columnsSql FROM $tablesSql with (NOLOCK) ";
         
 
         /**
@@ -234,7 +231,7 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
         /**
          * Check for a WHERE clause
          */
-         $sqlWhere = '';
+        $sqlWhere = '';
         if (isset($definition['where'])) {
             $whereConditions = $definition['where'];
             if (is_array($whereConditions)) {
@@ -270,7 +267,7 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
          * Check for a ORDER clause
          */
         $sqlOrder = '';
-        $nolockTokens = array('guid','dev_id');
+        $nolockTokens = array('guid');
         if (isset($definition['order'])) {
             $nolock = false;
             $orderFields = $definition['order'];
@@ -300,13 +297,17 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
                 $sqlOrder =  " ORDER BY " . join(", ", $orderItems);
             }
 
+            /*
             if ($nolock) {
                 $sql .= " with (nolock) ";
             }
+            */
 
         }
 
+
         $sql .= $sqlJoins . $sqlWhere . $sqlGroup . $sqlOrder;
+
         if (empty($sqlOrder)) {
             $sqlOrder == null;  //side effect, limit clause need =>  if (isset($sqlOrder) && !empty($sqlOrder))
         }
@@ -318,11 +319,20 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
         if (isset($definition['limit'])) {
             $limitValue = $definition["limit"];
             if (is_array($limitValue)) {
+                //1.2 is a integer, but 1.3 is a array
                 $number = $limitValue["number"];
+                if (is_array($number)) {
+                    $number = $number['value'];
+                }
 
                 if (isset($limitValue['offset'])) {
+                    $offset = $limitValue["offset"];
+                    if (is_array($offset)) {
+                        $offset = $offset['value'];
+                    }
+
                     $sql = $this->limit($sql, '100 PERCENT');
-                    $startIndex = $limitValue['offset'] + 1;//index start from 1
+                    $startIndex = $offset + 1;//index start from 1
                     $endIndex = $startIndex + $number - 1;
 
                     $pos = strpos($sql, 'FROM');
@@ -747,19 +757,39 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
         return $sql;
     }
 
-    /*
-       public function addForeignKey($tableName, $schemaName, $reference){}
-       public function dropForeignKey($tableName, $schemaName, $referenceName){}
+    public function addForeignKey($tableName, $schemaName, $reference)
+    {
+    }
 
-       public function createTable($tableName, $schemaName, $definition){}
-       public function dropTable($tableName, $schemaName){}
+    public function dropForeignKey($tableName, $schemaName, $referenceName)
+    {
+    }
 
+    public function createTable($tableName, $schemaName, $definition)
+    {
+    }
 
-       public function supportsSavepoints(){}
-       public function supportsReleseSavepoints(){}
+    public function dropTable($tableName, $schemaName)
+    {
+    }
 
-       public function createSavepoint($name){}
-       public function releaseSavepoint($name){}
-       public function rollbackSavepoint($name){}
-     */
+    public function supportsSavepoints()
+    {
+    }
+
+    public function supportsReleseSavepoints()
+    {
+    }
+
+    public function createSavepoint($name)
+    {
+    }
+
+    public function releaseSavepoint($name)
+    {
+    }
+
+    public function rollbackSavepoint($name)
+    {
+    }
 }

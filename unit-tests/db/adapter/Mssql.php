@@ -273,7 +273,7 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
 
 
     //insert miss parameters, need to do this
-    public function executePrepared($statement, $placeholders, $dataTypes)
+    public function executePrepared($statement, $placeholders, $dataTypes = "")
     {
         //return $this->_pdo->prepare($statement->queryString, $placeholders);//not working
 
@@ -294,10 +294,14 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
                 }
             }
 
+            /* TODO try 1.2
             if (is_array($dataTypes) && !empty($dataTypes)) {
                 if (!isset($dataTypes[$wildcard])) {
                     throw new \Phalcon\Db\Exception("Invalid bind type parameter");
                 }
+            */
+
+            if (isset($dataType) && is_array($dataTypes) && isset($dataTypes[$wildcard])) {
                 $type = $dataTypes[$wildcard];
 
                 /**
@@ -318,7 +322,6 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
                     $statement->bindParam($parameter, $castValue);
                     $statement->bindValue($parameter, $castValue);
                 } else {
-                    $statement->bindParam($parameter, $castValue, $type);
                     $statement->bindParam($parameter, $castValue, $type);
                     $statement->bindValue($parameter, $castValue, $type);
                 }
@@ -529,10 +532,9 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
         }
 
         /**
-         * Perform the update via PDO::execute
-         */
-        //					echo PHP_EOL . $updateSql;
-        //					var_dump($updateValues);
+         * Perform the update via PDO::execute */
+        //echo PHP_EOL . $updateSql . PHP_EOL;
+        //var_dump($updateValues);
         return $this->execute($updateSql, $updateValues, $bindDataTypes);
     }
 
@@ -540,8 +542,18 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
 
     public function lastInsertId($tableName = null, $primaryKey = null)
     {
+        //return $this->_pdo->lastInsertId(); //not supported
+
         $sql = 'SELECT SCOPE_IDENTITY()';
-        return (int)$this->fetchOne($sql);
+        $result = $this->fetchOne($sql);
+
+        //not sure what make it difference, may be it was cause by mssql enterprise and standard
+        if (is_array($result)) {
+            $result = $result[0];
+        }
+
+        return (int)$result;
+                
     }
 
 
@@ -646,12 +658,15 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
 
         $referenceObjects = array();
         foreach ($references as $name => $arrayReference) {
-            $referenceObjects[$name] = new \Phalcon\Db\Reference($name, array(
+            $referenceObjects[$name] = new \Phalcon\Db\Reference(
+                $name,
+                array(
                         "referencedSchema"	=> $arrayReference["referencedSchema"],
                         "referencedTable"	=> $arrayReference["referencedTable"],
                         "columns"			=> $arrayReference["columns"],
                         "referencedColumns" => $arrayReference["referencedColumns"]
-                        ));
+                )
+            );
         }
 
         return $referenceObjects;
