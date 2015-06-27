@@ -267,9 +267,7 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
          * Check for a ORDER clause
          */
         $sqlOrder = '';
-        $nolockTokens = array('guid');
         if (isset($definition['order'])) {
-            $nolock = false;
             $orderFields = $definition['order'];
             $orderItems = array();
             foreach ($orderFields as $orderItem) {
@@ -285,26 +283,13 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
                     $orderSqlItemType = $orderSqlItem;
                 }
 
-                //check nolock
-                if (in_array(strtolower($orderItem[0]['name']), $nolockTokens)) {
-                    $nolock = true;
-                } else {
-                    $orderItems[] = $orderSqlItemType;
-                }
+                $orderItems[] = $orderSqlItemType;
 
             }
             if (count($orderItems)) {
                 $sqlOrder =  " ORDER BY " . join(", ", $orderItems);
             }
-
-            /*
-            if ($nolock) {
-                $sql .= " with (nolock) ";
-            }
-            */
-
         }
-
 
         $sql .= $sqlJoins . $sqlWhere . $sqlGroup . $sqlOrder;
 
