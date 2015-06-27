@@ -6,6 +6,7 @@ use Phalcon\Db\Column;
 use Phalcon\Db\Adapter\Pdo as AdapterPdo;
 use Phalcon\Events\EventsAwareInterface;
 use Phalcon\Db\AdapterInterface;
+use Twm\Db\Dialect;
 
 class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
 {
@@ -13,7 +14,7 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
     protected $_type = 'mssql';
     //	protected $_dialectType = 'sqlsrv';
 
-    public function __construct($descriptor)
+    public function __construct(array $descriptor)
     {
         $this->connect($descriptor);
     }
@@ -202,7 +203,7 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
     public function connect($descriptor = null)
     {
         $this->_pdo = new \PDO(
-            "{$descriptor['pdoType']}:host={$descriptor['host']};dbname={$descriptor['dbname']}",
+            "{$descriptor['pdoType']}:server={$descriptor['host']};database={$descriptor['dbname']}",
             $descriptor['username'],
             $descriptor['password'],
             array(
@@ -216,7 +217,7 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
         $this->_dialect = new \Twm\Db\Dialect\Mssql();
     }
 
-    public function query($sql, $bindParams = null, $bindTypes = null)
+    public function query($sql, array $bindParams = null, $bindTypes = null)
     {
         if (is_string($sql)) {
             //check sql server keyword
@@ -270,13 +271,12 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
         $dialect = $this->_dialect;
         return $dialect->limit($sqlQuery, $number);
     }
+	
 
 
     //insert miss parameters, need to do this
-    public function executePrepared($statement, $placeholders, $dataTypes = "")
+    public function executePrepared(\PDOStatement $statement, array $placeholders, $dataTypes = "")
     {
-        //return $this->_pdo->prepare($statement->queryString, $placeholders);//not working
-
         if (!is_array($placeholders)) {
             throw new \Phalcon\Db\Exception("Placeholders must be an array");
         }
@@ -337,7 +337,7 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
         return $statement;
     }
 
-    public function insert($table, $values, $fields = null, $dataTypes = null)
+    public function insert($table, array $values, $fields = null, $dataTypes = null)
     {
         $placeholders;
         $insertValues;
@@ -594,11 +594,11 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
      */
     public function describeIndexes($table, $schema = null)
     {
-
         $dialect = $this->_dialect;
 
         $indexes = array();
         $temps = $this->fetchAll($dialect->describeIndexes($table, $schema), \Phalcon\Db::FETCH_ASSOC);
+		
         foreach ($temps as $index) {
             $keyName = $index['index_id'];
             if (!isset($indexes[$keyName])) {

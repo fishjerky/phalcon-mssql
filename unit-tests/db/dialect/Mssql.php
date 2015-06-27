@@ -50,7 +50,7 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
         }
     }
 
-    public function select($definition)
+    public function select(array $definition)
     {
         $tables;
         $columns;
@@ -267,9 +267,7 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
          * Check for a ORDER clause
          */
         $sqlOrder = '';
-        $nolockTokens = array('guid');
         if (isset($definition['order'])) {
-            $nolock = false;
             $orderFields = $definition['order'];
             $orderItems = array();
             foreach ($orderFields as $orderItem) {
@@ -285,24 +283,11 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
                     $orderSqlItemType = $orderSqlItem;
                 }
 
-                //check nolock
-                if (in_array(strtolower($orderItem[0]['name']), $nolockTokens)) {
-                    $nolock = true;
-                } else {
-                    $orderItems[] = $orderSqlItemType;
-                }
-
+                $orderItems[] = $orderSqlItemType;
             }
             if (count($orderItems)) {
                 $sqlOrder =  " ORDER BY " . join(", ", $orderItems);
             }
-
-            /*
-            if ($nolock) {
-                $sql .= " with (nolock) ";
-            }
-            */
-
         }
 
 
@@ -374,19 +359,20 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
         return $sql;
     }
 
-
+/*
+	getColumnList became final method at Phalcon 2.0
     public function getColumnList($columnList)
     {
         //exec sp_columns 'table name'
     }
-
+*/
     /**
      * Gets the column name in MsSQL
      *
      * @param Phalcon\Db\ColumnInterface column
      * @return string
      */
-    public function getColumnDefinition($column)
+    public function getColumnDefinition(\Phalcon\Db\ColumnInterface $column)
     {
         $columnSql;
         $size;
@@ -436,7 +422,7 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
         return $columnSql;
     }
 
-    public function addColumn($tableName, $schemaName, $column)
+    public function addColumn($tableName, $schemaName, \Phalcon\Db\ColumnInterface $column)
     {
         $afterPosition;
         $sql;
@@ -469,7 +455,7 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
         }
         return $sql;
     }
-    public function modifyColumn($tableName, $schemaName, $column)
+    public function modifyColumn($tableName, $schemaName, \Phalcon\Db\ColumnInterface $column, \Phalcon\Db\ColumnInterface $currentColumn = NULL)
     {
         $sql;
 
@@ -513,7 +499,7 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
      CREATE UNIQUE NONCLUSTERED INDEX (indexname)
      ON dbo.YourTableName(columns to include)
      */
-    public function addIndex($tableName, $schemaName, $index)
+    public function addIndex($tableName, $schemaName, \Phalcon\Db\IndexInterface $index)
     {
         $sql;
         if (!is_object($index)) {
@@ -547,7 +533,7 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
         return $sql ;
     }
 
-    public function addPrimaryKey($tableName, $schemaName, $index)
+    public function addPrimaryKey($tableName, $schemaName, \Phalcon\Db\IndexInterface $index)
     {
         $sql;
         if (!is_object($index)) {
@@ -653,7 +639,7 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
      * @param string schemaName
      * @return string
      */
-    public function createView($viewName, $definition, $schemaName)
+    public function createView($viewName, array $definition, $schemaName = NULL)
     {
         $view;
         $viewSql;
@@ -680,7 +666,7 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
      * @param boolean ifExists
      * @return string
      */
-    public function dropView($viewName, $schemaName, $ifExists = true)
+    public function dropView($viewName, $schemaName = NULL, $ifExists = NULL)
     {
         $sql="";
         $view;
@@ -701,7 +687,6 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
         $sql .= "DROP VIEW " .  $view;
         return $sql;
     }
-
 
     /**
      * Generates SQL to query indexes on a table
@@ -738,7 +723,6 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
         return $sql;
     }
 
-
     /**
      * Generates the SQL to describe the table creation options
      *
@@ -757,7 +741,7 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
         return $sql;
     }
 
-    public function addForeignKey($tableName, $schemaName, $reference)
+    public function addForeignKey($tableName, $schemaName, \Phalcon\Db\ReferenceInterface $reference)
     {
     }
 
@@ -765,7 +749,7 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
     {
     }
 
-    public function createTable($tableName, $schemaName, $definition)
+    public function createTable($tableName, $schemaName, array $definition)
     {
     }
 
@@ -792,4 +776,5 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
     public function rollbackSavepoint($name)
     {
     }
+    
 }
