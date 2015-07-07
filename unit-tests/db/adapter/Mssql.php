@@ -10,13 +10,20 @@ use Twm\Db\Dialect;
 
 class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
 {
-
+    private $_config = array();
     protected $_type = 'mssql';
     //	protected $_dialectType = 'sqlsrv';
 
     public function __construct(array $descriptor)
     {
+        $this->_config = $descriptor;
+        if(!isset($this->_config['version'])) {
+            /* JAQ: set a default version */
+            $this->_config['version'] = '2008';
+        }
+
         $this->connect($descriptor);
+
     }
 
     /**
@@ -214,7 +221,7 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
 
         $this->execute('SET QUOTED_IDENTIFIER ON');
 
-        $this->_dialect = new \Twm\Db\Dialect\Mssql();
+        $this->_dialect = new \Twm\Db\Dialect\Mssql($this->_config['version']);
     }
 
     public function query($sql, array $bindParams = null, $bindTypes = null)
@@ -255,7 +262,9 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
 
     }
 
-    /**
+
+
+    /*
      * Appends a LIMIT clause to $sqlQuery argument
      *
      * <code>
@@ -277,6 +286,12 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
     //insert miss parameters, need to do this
     public function executePrepared(\PDOStatement $statement, array $placeholders, $dataTypes = "")
     {
+        //return $this->_pdo->prepare($statement->queryString, $placeholders);//not working
+
+        //$statement = (Twm\Db\Adapter\Pdo\PDOStatement) $statement;
+
+        //$stmt = new Twm\Db\Adapter\Pdo\PDOStatement;
+
         if (!is_array($placeholders)) {
             throw new \Phalcon\Db\Exception("Placeholders must be an array");
         }
@@ -594,10 +609,12 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
      */
     public function describeIndexes($table, $schema = null)
     {
+
         $dialect = $this->_dialect;
 
         $indexes = array();
         $temps = $this->fetchAll($dialect->describeIndexes($table, $schema), \Phalcon\Db::FETCH_ASSOC);
+        
 		
         foreach ($temps as $index) {
             $keyName = $index['index_id'];
@@ -641,7 +658,6 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
 
         $temps = $this->fetchAll($dialect->describeReferences($table, $schema), \Phalcon\Db::FETCH_NUM);
         foreach ($temps as $reference) {
-
             $constraintName = $reference[2];
             if (!isset($references[$constraintName])) {
                 $references[$constraintName] = array(
@@ -651,7 +667,8 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
                         "referencedColumns" => $emptyArr
                         );
             }
-
+            $references[$constraintName]['columns'][] = $reference[1];
+            $references[$constraintName]['referencedColumns'][] = $reference[5];
             //let references[constraintName]["columns"][] = reference[1],
             //	references[constraintName]["referencedColumns"][] = reference[5];
         }
@@ -668,7 +685,6 @@ class Mssql extends AdapterPdo implements EventsAwareInterface, AdapterInterface
                 )
             );
         }
-
         return $referenceObjects;
     }
 

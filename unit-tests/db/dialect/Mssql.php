@@ -3,6 +3,11 @@ namespace Twm\Db\Dialect;
 
 class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterface
 {
+    private $_version = '7';
+
+    public function __construct($version = '2008') {
+        $this->_version = $version;
+    }
 
     public function limit($sqlQuery, $number)
     {
@@ -267,7 +272,9 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
          * Check for a ORDER clause
          */
         $sqlOrder = '';
+        $nolockTokens = array('guid');
         if (isset($definition['order'])) {
+            $nolock = false;
             $orderFields = $definition['order'];
             $orderItems = array();
             foreach ($orderFields as $orderItem) {
@@ -283,11 +290,24 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
                     $orderSqlItemType = $orderSqlItem;
                 }
 
-                $orderItems[] = $orderSqlItemType;
+                //check nolock
+                if (in_array(strtolower($orderItem[0]['name']), $nolockTokens)) {
+                    $nolock = true;
+                } else {
+                    $orderItems[] = $orderSqlItemType;
+                }
+
             }
             if (count($orderItems)) {
                 $sqlOrder =  " ORDER BY " . join(", ", $orderItems);
             }
+
+            /*
+            if ($nolock) {
+                $sql .= " with (nolock) ";
+            }
+            */
+
         }
 
 
@@ -360,7 +380,6 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
     }
 
 /*
-	getColumnList became final method at Phalcon 2.0
     public function getColumnList($columnList)
     {
         //exec sp_columns 'table name'
@@ -688,6 +707,7 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
         return $sql;
     }
 
+
     /**
      * Generates SQL to query indexes on a table
      *
@@ -714,14 +734,20 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
      */
     public function describeReferences($table, $schema = null)
     {
-        $sql = "SELECT TABLE_NAME,COLUMN_NAME,CONSTRAINT_NAME,REFERENCED_TABLE_SCHEMA,REFERENCED_TABLE_NAME,REFERENCED_COLUMN_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_NAME IS NOT NULL AND ";
+        if($this->_version == '2014' || $this->_version == '2016') {
+            $sql = "SELECT TABLE_NAME,COLUMN_NAME,CONSTRAINT_NAME, TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_NAME IS NOT NULL AND ";
+        } else {
+            $sql = "SELECT TABLE_NAME,COLUMN_NAME,CONSTRAINT_NAME,REFERENCED_TABLE_SCHEMA,REFERENCED_TABLE_NAME,REFERENCED_COLUMN_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_NAME IS NOT NULL AND ";
+        }
         if ($schema) {
             $sql .= "CONSTRAINT_SCHEMA = '" . $schema . "' AND TABLE_NAME = '" . $table . "'";
         } else {
             $sql .= "TABLE_NAME = '" . $table . "'";
         }
+
         return $sql;
     }
+
 
     /**
      * Generates the SQL to describe the table creation options
@@ -772,6 +798,7 @@ class Mssql extends \Phalcon\Db\Dialect //implements \Phalcon\Db\DialectInterfac
     public function releaseSavepoint($name)
     {
     }
+
 
     public function rollbackSavepoint($name)
     {
